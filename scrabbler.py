@@ -31,20 +31,25 @@ for x in uWord:
         xDict[x] = 1
 
 #lastly, compare the number of letters in the desired word to the count of the letter list
+#cError is the number of letters not matching; if the number of wildcards is equal or exceeds that number, the word is
+#valid to be played
 cError = 0
 for z in uWord:
     if z in wDict:
         if wDict[z] >= xDict[z]:
             cError = 0
         else:
-            cError = 1
-            break
+            cError += 1
+
     else:
-        cError = 1
-        break
+        cError += 1
+
+wildcards = cError - wDict['?']
 
 #let the user know the good or bad news
-if cError == 0:
+if wildcards <= 0:
     print "You can play that word!"
 else:
-    print "Sorry, that word not possible with your current letters."
+    print "Sorry, that word is not possible with your current letters.\n"
+    print "Number of wildcards available: " + str(wDict['?']) + "\n"
+    print "Number of additional wildcards needed: " + str(wildcards)
