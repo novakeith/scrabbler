@@ -1,7 +1,8 @@
 # coding: UTF-8
-# Scrabbler by KNOVA
+# Scrabbler by KNOVA -- v1.3
 # submitted as part of the reddit.com/r/dailyprogrammer challenge #294
 # see here: https://www.reddit.com/r/dailyprogrammer/comments/5go843/20161205_challenge_294_easy_rack_management_1/
+import timeit
 
 # scrabble letter values
 ltrVal = {'?':0, 'a':1, 'b':3, 'c':3, 'd':2, 'e':1, 'f':4, 'g':2, 'h':4, 'i':1, 'j':8, 'k':5, 'l':1, 'm':3, 'n':1, 'o':1, 'p':3, 'q':10, 'r':1, 's':1, 't':1, 'u':1, 'v':4, 'w':4, 'x':8, 'y':4, 'z':10}
@@ -33,15 +34,37 @@ def wordcompare(letters, dicword):
             if letters[z] >= dicword[z]:
                 cError += 0
             else:
-                cError += 1
-                devalue += ltrVal[z]
+                cError = cError + (dicword[z] - letters[z])
+                devalue += ltrVal[z] * (dicword[z] - letters[z])
 
         else:
-            cError += 1
-            devalue += ltrVal[z]
+            cError += dicword[z]
+            devalue += ltrVal[z] * dicword[z]
 
     return {'distance':cError, 'devalue':devalue}
 
+
+def findbestword(letters, userword):
+    bestscore = 0
+    bestwords = {}
+    f = open('enable1.txt', 'r')
+    for line in f:
+        xline = line.lower().strip("\r\n")
+        linedict = countletters(xline)
+        compx = wordcompare(letters, linedict)
+        if compx['distance'] - letters['?'] <= 0 and countwordval(xline) - compx['devalue'] >= bestscore:
+            bestscore = countwordval(xline)
+            bestwords[xline] = countwordval(xline)
+
+    f.close()
+
+    #pick top word(s) with available given letters
+    betterword = {}
+    for words in bestwords:
+        if countwordval(words) >= bestscore:
+            betterword[words] = countwordval(words)
+
+    return betterword
 
 def main():
     print "\n**Scrabble Finder v1.0\n" \
@@ -54,8 +77,8 @@ def main():
     uWord = raw_input("What word do you want to create?>")
 
     # count up letters in the letter list - using our shiny new function 'countletters'.
-    wDict = countletters(uLetters)
-    xDict = countletters(uWord)
+    wDict = countletters(uLetters.lower())
+    xDict = countletters(uWord.lower())
 
     # lastly, compare the number of letters in the desired word to the count of the letter list
     # cError is the number of letters not matching; if the number of wildcards is equal or exceeds that number,
@@ -63,14 +86,20 @@ def main():
     comp = wordcompare(wDict,xDict)
 
     wildcards = comp['distance'] - wDict['?']
+    best = findbestword(wDict, uWord)
 
 
     # let the user know the good or bad news
     if wildcards <= 0:
-        print "You can play that word! Point Value: " + str(countwordval(uWord) - comp['devalue'])
+        print "\nYou can play that word! Point Value: " + str(countwordval(uWord) - comp['devalue'])
+        print "Given your letters, an even better word would be: " + str(best)
     else:
-        print "Sorry, that word is not possible with your current letters.\n"
-        print "Number of wildcards available: " + str(wDict['?']) + "\n"
+        print "\nSorry, that word is not possible with your current letters."
+        print "Number of wildcards available: " + str(wDict['?'])
         print "Number of additional wildcards needed: " + str(wildcards)
+        print "The best word(s) you can play: " + str(best)
 
 main()
+
+print "\nExecuted in " + str(timeit.timeit())[:6] + " seconds\n"
+
